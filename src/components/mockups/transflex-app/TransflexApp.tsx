@@ -277,6 +277,11 @@ export function TransflexApp() {
   const [vehicle, setVehicle] = useState("Tata Nexon EV");
   const [tripSelected, setTripSelected] = useState(routeStops[2][0]);
   const [directions, setDirections] = useState<Station | null>(null);
+  const [startDestination, setStartDestination] = useState("Puducherry");
+  const [endDestination, setEndDestination] = useState("Chennai");
+  const [routeEditorOpen, setRouteEditorOpen] = useState(false);
+  const [routeEstimate, setRouteEstimate] = useState({ distance: "177 km", duration: "3 hr 45 min" });
+  const [routeStatus, setRouteStatus] = useState("Simulated route estimate");
 
   const filteredStations = useMemo(() => stations.filter((station) => {
     const matches = `${station.name} ${station.area}`.toLowerCase().includes(search.toLowerCase());
@@ -296,6 +301,16 @@ export function TransflexApp() {
     setAssistantReply(response);
   };
   const goDirections = (station: Station) => setDirections(station);
+  const updateRouteEstimate = () => {
+    const nextStart = startDestination.trim() || "Puducherry";
+    const nextEnd = endDestination.trim() || "Chennai";
+    setStartDestination(nextStart);
+    setEndDestination(nextEnd);
+    const isDefaultRoute = nextStart.toLowerCase() === "puducherry" && nextEnd.toLowerCase() === "chennai";
+    setRouteEstimate(isDefaultRoute ? { distance: "177 km", duration: "3 hr 45 min" } : { distance: "198 km", duration: "4 hr 15 min" });
+    setRouteStatus("Updated just now · simulated route estimate");
+    setRouteEditorOpen(false);
+  };
 
   return (
     <div className="min-h-[100dvh] overflow-x-hidden bg-[#08161e] text-[#e5f3eb] selection:bg-[#c8ff7a] selection:text-[#102329]" style={{ fontFamily: "'DM Sans', ui-sans-serif, system-ui, sans-serif" }}>
@@ -346,16 +361,17 @@ export function TransflexApp() {
         {view === "trip" && (
           <main className="tf-rise pt-5 sm:pt-10">
             <button type="button" onClick={() => setView("home")} className="mb-5 flex items-center gap-2 text-xs text-[#9bc1bd] hover:text-[#c8ff7a]"><ArrowLeft size={15} /> Back to nearby chargers</button>
-            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#6f9698]">Long drive</p><h1 className="mt-2 text-4xl font-semibold tracking-[-.06em] text-[#eff9f0]">Puducherry <span className="font-normal text-[#6f9698]">to</span> Chennai</h1><p className="mt-2 text-sm text-[#8eb5b6]">A calmer route, with the right charge waiting when you arrive.</p></div><div className="rounded-2xl border border-[#c8ff7a]/15 bg-[#c8ff7a]/6 px-4 py-3"><p className="text-[10px] uppercase tracking-[.16em] text-[#82a8a7]">Route estimate</p><p className="mt-1 text-lg font-semibold text-[#dff3e8]">177 km <span className="text-sm font-normal text-[#8eb5b6]">· 3 hr 45 min</span></p></div></div>
+            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#6f9698]">Long drive</p><h1 className="mt-2 break-words text-4xl font-semibold tracking-[-.06em] text-[#eff9f0]">{startDestination} <span className="font-normal text-[#6f9698]">to</span> {endDestination}</h1><p className="mt-2 text-sm text-[#8eb5b6]">A calmer route, with the right charge waiting when you arrive.</p></div><div className="rounded-2xl border border-[#c8ff7a]/15 bg-[#c8ff7a]/6 px-4 py-3"><div className="flex items-center justify-between gap-5"><p className="text-[10px] uppercase tracking-[.16em] text-[#82a8a7]">Route estimate</p><button type="button" onClick={() => setRouteEditorOpen((open) => !open)} className="flex items-center gap-1 text-[10px] font-semibold text-[#c8ff7a] hover:text-[#e1ffad]">{routeEditorOpen ? "Close" : "Edit route"} <Settings2 size={12} /></button></div><p className="mt-1 text-lg font-semibold text-[#dff3e8]">{routeEstimate.distance} <span className="text-sm font-normal text-[#8eb5b6]">· {routeEstimate.duration}</span></p><p className="mt-1 text-[10px] text-[#6f9698]">{routeStatus}</p></div></div>
+            {routeEditorOpen && <section className="mt-5 rounded-[24px] border border-[#c8ff7a]/20 bg-[#102831] p-4 sm:p-5"><div className="flex items-start gap-3"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#c8ff7a]/12 text-[#c8ff7a]"><Route size={18} /></div><div><p className="text-sm font-semibold text-[#edf8ee]">Plan a different route</p><p className="mt-1 text-xs leading-5 text-[#8eb5b6]">Change your start and end destinations to refresh the demo estimate and route preview.</p></div></div><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="block"><span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[.16em] text-[#6f9698]">Start destination</span><div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b2028] px-3"><MapPin size={15} className="shrink-0 text-[#c8ff7a]" /><input value={startDestination} onChange={(event) => setStartDestination(event.target.value)} placeholder="e.g. Puducherry" className="min-w-0 flex-1 bg-transparent py-3 text-sm text-[#e8f5ed] outline-none placeholder:text-[#648486]" aria-label="Start destination" /></div></label><label className="block"><span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[.16em] text-[#6f9698]">End destination</span><div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b2028] px-3"><Navigation size={15} className="shrink-0 text-[#6ad9d2]" /><input value={endDestination} onChange={(event) => setEndDestination(event.target.value)} placeholder="e.g. Chennai" className="min-w-0 flex-1 bg-transparent py-3 text-sm text-[#e8f5ed] outline-none placeholder:text-[#648486]" aria-label="End destination" /></div></label></div><button type="button" onClick={updateRouteEstimate} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#c8ff7a] py-3 text-xs font-bold text-[#102329] hover:bg-[#dcffa0]">Update route estimate <ArrowRight size={14} /></button></section>}
             <div className="mt-7 grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
               <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#102a35] p-5">
                 <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "linear-gradient(24deg, transparent 48%, rgba(126,206,205,.24) 49%, transparent 50%), linear-gradient(110deg, transparent 48%, rgba(126,206,205,.18) 49%, transparent 50%)", backgroundSize: "120px 120px, 180px 150px" }} />
                 <div className="relative flex h-[310px] flex-col justify-between">
-                  <div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-full bg-[#c8ff7a] text-[#102329]"><MapPin size={17} /></div><div><p className="text-sm font-semibold text-[#eaf8ec]">Puducherry</p><p className="text-[10px] text-[#83a9a8]">Start · 08:30 AM</p></div></div>
+                  <div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-full bg-[#c8ff7a] text-[#102329]"><MapPin size={17} /></div><div><p className="max-w-[220px] truncate text-sm font-semibold text-[#eaf8ec]">{startDestination}</p><p className="text-[10px] text-[#83a9a8]">Start · 08:30 AM</p></div></div>
                   <div className="absolute bottom-10 left-6 top-12 w-[3px] rounded-full bg-gradient-to-b from-[#c8ff7a] via-[#6ad9d2] to-[#c8ff7a]" />
                   <div className="ml-14 rounded-2xl border border-white/10 bg-[#0c202a]/85 p-3"><p className="text-[10px] uppercase tracking-[.15em] text-[#6f9698]">Recommended stop</p><p className="mt-1 text-sm font-semibold text-[#e9f6eb]">Mahabalipuram Bay Hub</p><p className="mt-1 text-[11px] text-[#91b5b2]">96 km · about 2 hours in</p></div>
-                  <div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-full border border-[#6ad9d2] bg-[#18454a] text-[#a7ede4]"><Navigation size={17} /></div><div><p className="text-sm font-semibold text-[#eaf8ec]">Chennai</p><p className="text-[10px] text-[#83a9a8]">Arrival · around 12:15 PM</p></div></div>
-                  <span className="absolute bottom-4 right-3 text-[10px] text-[#6f9698]">ECR coastal route</span>
+                  <div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-full border border-[#6ad9d2] bg-[#18454a] text-[#a7ede4]"><Navigation size={17} /></div><div><p className="max-w-[220px] truncate text-sm font-semibold text-[#eaf8ec]">{endDestination}</p><p className="text-[10px] text-[#83a9a8]">Arrival · around 12:15 PM</p></div></div>
+                  <span className="absolute bottom-4 right-3 text-[10px] text-[#6f9698]">Simulated route preview</span>
                 </div>
               </div>
               <div className="rounded-[28px] border border-[#c8ff7a]/15 bg-[#112c31] p-5"><div className="flex items-start gap-3"><div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#c8ff7a]/12 text-[#c8ff7a]"><Sparkles size={19} /></div><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#c8ff7a]">AI recommended charging stops</p><h2 className="mt-1 text-lg font-semibold text-[#edf8ee]">One easy pause is enough.</h2><p className="mt-2 text-xs leading-5 text-[#9fc2bc]">Based on your {vehicle}, route timing and charger availability, Mahabalipuram Bay Hub gives you the best balance of speed and a comfortable halfway break.</p></div></div><button type="button" onClick={() => setTripSelected(routeStops[4][0])} className="mt-5 flex w-full items-center justify-between rounded-2xl border border-[#c8ff7a]/35 bg-[#c8ff7a]/8 p-3 text-left hover:bg-[#c8ff7a]/15"><span><span className="block text-sm font-semibold text-[#e7f6ea]">Mahabalipuram Bay Hub</span><span className="mt-1 block text-[11px] text-[#a1c6bf]">96 km · 180 kW · 5 slots open</span></span><ArrowRight size={17} className="text-[#c8ff7a]" /></button></div>
